@@ -1,0 +1,22 @@
+- ravens: https://arxiv.org/abs/2203.04571
+- https://arcprize.org/
+
+* kanerva hyperdim
+
+
+P. Kanerva, “Hyperdimensional computing: An introduction to computing
+in distributed representation with high-dimensional random vectors,”
+Cognitive Computation, vol. 1, no. 2, pp. 139–159, 2009.
+
+
+* Vector Symbolic Architectures as a Computing Framework for Emerging Hardware
+
+https://arxiv.org/abs/2106.05268
+
+* Sparse Distributed Memory
+book
+
+
+* block sparse vectors
+
+https://www.researchgate.net/publication/299535938_High-Dimensional_Computing_with_Sparse_Vectors
