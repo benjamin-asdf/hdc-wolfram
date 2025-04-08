@@ -1,22 +1,102 @@
+A work in progress list of sources, inspirations, possible inspirations.
+
+* Analogical reasoning, benchmarks
+
 - ravens: https://arxiv.org/abs/2203.04571
 - https://arcprize.org/
 
-* kanerva hyperdim
-
+* Kanerva HD
 
 P. Kanerva, “Hyperdimensional computing: An introduction to computing
 in distributed representation with high-dimensional random vectors,”
 Cognitive Computation, vol. 1, no. 2, pp. 139–159, 2009.
 
+* Datastructures / Computing in superposition
 
-* Vector Symbolic Architectures as a Computing Framework for Emerging Hardware
-
+Vector Symbolic Architectures as a Computing Framework for Emerging Hardware
 https://arxiv.org/abs/2106.05268
+
+* Resonator Networks
+
+https://direct.mit.edu/neco/article/32/12/2332/95653/Resonator-Networks-2-Factorization-Performance-and)
+
 
 * Sparse Distributed Memory
 book
 
-
 * block sparse vectors
 
 https://www.researchgate.net/publication/299535938_High-Dimensional_Computing_with_Sparse_Vectors
+
+* Muchroom bodies
+
+Papers with mushroom body models:
+
+- https://www.nature.com/articles/s41467-021-22592-4,
+- https://www.pnas.org/doi/10.1073/pnas.2102158118,
+- https://www.cell.com/current-biology/fulltext/S0960-9822(16)31288-X
+- On mushroom bodies and early cognition, [[https://biology.case.edu/faculty/gabriella-wolff/][Gabriella Wolff]] is cool.
+
+- Book: Metazoa, Peter Godfrey-Smith 2021
+
+* Cerebellum - Sparse Distributed Memory - Transformer - Modern Hopfield
+
+- https://www.trentonbricken.com/Attention-Approximates-Sparse-Distributed-Memory/
+- https://www.trentonbricken.com/Cerebellum-Beyond-Motor-Control/
+- https://www.trentonbricken.com/SDM-And-Hopfield-Networks/
+- https://benjamin-schwerdtner.de/high-dimensional-computing-with-sparse-vectors.html
+
+* Books
+
+- Surfaces and Essences: Analogy as the Fuel and Fire of Thinking, 2013,
+  Hofstadter + Sander
+
+- Peter Pesic, Polyphonic Minds: Music of the Hemispheres 2017;
+  philosophy, history of music + psychology, neuroscience of neuronal syntax
+
+- Hertz, Korgh, Palmer /Introduction to The Theory of Neural Computation/, 1990
+
+- Chris Eliasmith, /How to Build a Brain/
+  reading currently, Cool talk: https://youtu.be/gc7oWzpaTjY?si=2DByA_VxZRV_msxT
+  is very rich in references
+
+
+* Neuroscience
+
+
+** Cell Assemblies / Neuronal Ensembles
+
+My idea is HD/VSA is a computer science that can be used to model Neuronal Ensembles.
+
+
+Neural syntax: cell assemblies, synapsembles and readers, György Buzsáki
+https://pmc.ncbi.nlm.nih.gov/articles/PMC3005627/
+
+- Podcast: https://youtu.be/pJhlMsc2UKQ?si=J3yfdNkLMkBt9PBT
+- Book: György Buzsáki The Brain from Inside Out, 2019
+
+
+- Book: Neural Assemblies: An Alternative Approach to Classical Artificial Intelligence, 2022, Guenther Palm
+
+
+- Talk: https://youtu.be/QRr_2PuzTZU?si=lazClIJY1c4p7kGm
+- Textbook: /Lectures in Neuroscience/ (Yuste), especially chapter Networks, Circuits
+  (this is a very cool cognitive neuroscience textbook generally).
+
+** Thalamocortical system
+
+- https://pubmed.ncbi.nlm.nih.gov/17707635/
+
+Murray Sherman talks:
+- https://www.youtube.com/live/aB2M1gg_1sU?si=xkUej72quuecejJI
+- https://www.youtube.com/live/KBILhSTpzFI?si=1GB8YlpZROX7IxvN
+
+** Multisensory Processing
+
+
+* Related Work
+
+Papadimitriou et. al https://arxiv.org/abs/2306.03812
+- Talk: https://youtu.be/mSX9CCKdBDA?si=OWKjbi8DyyKRffxr
+
+Cell Assemblies, forgotten and re-discoverd..
