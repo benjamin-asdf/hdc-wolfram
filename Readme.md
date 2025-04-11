@@ -1,5 +1,6 @@
 # Concept
 
+
 -   build a HD/VSA framework for wolfram + wolframite
 
 -   Inspirations:
