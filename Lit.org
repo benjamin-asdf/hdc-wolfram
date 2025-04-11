@@ -100,3 +100,8 @@ Papadimitriou et. al https://arxiv.org/abs/2306.03812
 - Talk: https://youtu.be/mSX9CCKdBDA?si=OWKjbi8DyyKRffxr
 
 Cell Assemblies, forgotten and re-discoverd..
+
+Numenta: Uses Sparse Distributed Representations (SDR),
+(example: 2k bits, 2% active).
+Benni: I am personally not convinced by Jeff Hawkins brain theory for some reason.
+But the sparse synapses make sense to me.

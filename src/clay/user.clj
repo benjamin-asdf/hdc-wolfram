@@ -3,7 +3,7 @@
    [scicloj.clay.v2.api :as clay]))
 
 (defn user-clay-make! []
-  (clay/make! {:source-path "notebooks/"}))
+  (clay/make! {:source-path ""}))
 
 (intern 'user 'user-clay-make! user-clay-make!)
 
