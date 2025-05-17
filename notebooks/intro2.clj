@@ -1,36 +1,37 @@
 (ns intro2
   (:require
-   [clojure.set :as set]
-   [clojure.string :as str]
    [wolframite.api.v1 :as wl]
-   [wolframite.core :as wc]
-   [wolframite.lib.helpers :as h]
-   [wolframite.runtime.defaults :as defaults]
+   ;; [wolframite.lib.helpers :as h]
+   [wolframite.runtime.defaults]
    [wolframite.tools.hiccup :as wh]
    [wolframite.wolfram :as w]
-   [scicloj.kindly.v4.kind :as k]
-   [scicloj.clay.v2.api :as clay]))
+   ;; [scicloj.clay.v2.api :as clay]
+   ))
 
 ;;
-;; # HD/VSA
+;; # HD/VSA MAP Intro
 ;;
 ;; https://github.com/benjamin-asdf/hdc-wolfram/issues/4
 ;;
+
+;; This follows the paper
+;; Hyperdimensional Computing: An Introduction to Computing in Distributed Representation with High-Dimensional Random Vectors
+;; P. Kanerva 2009
 
 ;; ### Neural Computing à la John Von Neumann
 
 ;;
 ;; - A very humble initial observation: Brains have a high *count of elements* (large circuits).
 ;; - let's see what happens if you build a computer with very **wide words**.
-;; - Instead of 64 bit words, use 10.000 bit words, hypervectors (HDV).
-;; - The basic datatype hypervector and a set of operations is a Vector Symbolic Architecture (VSA).
+;; - Instead of 64 bit words, use 10.000 bit words, **hypervectors** (HDV).
+;; - This datatype together with a set of operations is a **Vector Symbolic Architecture**
 ;;
 
 ;; -----------------------
 
 ;; ## Multiply-Add-Permute (MAP)
 ;;
-;; A flavor of VSA where you use +, * and permute.
+;; A simple flavor of VSA where you use +, * and permute.
 ;;
 
 ;; # The Hypervector
@@ -164,6 +165,8 @@
 ;; 1. Pick a random hypervector a
 ;; 2. Pick 10.000 random hypervectors (n)
 ;; 3. Find the similarity between i = 0...n and a
+
+(def a (wl/! (seed)))
 
 (wh/view-no-summary
  (w/ListPlot
@@ -493,7 +496,6 @@
 ;; Using non-commutative bind, we can represent directed edges for a directed graph.
 
 (defn non-commutative-bind
-  ""
   ([a b]
    (bind a (permute b))))
 
@@ -708,20 +710,17 @@
 
   (wl/! (similarity a+b+c (book-keep! :a)))
 
-
   ;; commutativity experiment
-  (for [n (range 10)]
+  (for [_n (range 10)]
     (let [hdvs [(seed) (seed)]
           hdvs (wl/! hdvs)]
-      (for [n (range 5)]
+      (for [_n (range 5)]
         (= (wl/! (apply bind (shuffle hdvs)))
            (wl/! (apply bind (shuffle hdvs)))))))
   (let [hdvs [(seed) (seed) (seed) (seed) (seed)]
         hdvs (wl/! hdvs)]
     (apply =
-           (for [n (range 5)] (wl/! (apply superposition (shuffle hdvs)))))))
-
-
+           (for [_ (range 5)] (wl/! (apply superposition (shuffle hdvs)))))))
 
 ^:kindly/hide-code
 (comment

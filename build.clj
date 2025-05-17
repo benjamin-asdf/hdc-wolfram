@@ -20,10 +20,11 @@
 
 (defn build-site [opts]
   (println "Going to build docs ...")
+  ((requiring-resolve 'wolframite.core/start!))
   ((requiring-resolve 'scicloj.clay.v2.api/make!)
    (assoc build-config/config
-                :clean-up-target-dir true
-                :show false))
+          :clean-up-target-dir true
+          :show false))
   opts)
 
 (comment

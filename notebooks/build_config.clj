@@ -2,9 +2,10 @@
   "Clay build configuration, used by ../build.clj script")
 
 (def config {
-             ;; :format [:quarto :html]
+             :format [:quarto :html]
              :base-source-path "notebooks"
              :source-path ["index.clj"
+                           "intro2.clj"
                            ;; {:part "foopart"
                            ;;  :chapters ["foopart/foo.clj"]}
                            ]
@@ -16,4 +17,7 @@
 
 ;; Render book:
 (comment
-  ((requiring-resolve 'scicloj.clay.v2.api/make!) config))
+
+  ((requiring-resolve 'scicloj.clay.v2.api/make!) config)
+
+  )
