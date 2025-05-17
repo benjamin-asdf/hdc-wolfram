@@ -25,3 +25,6 @@
                 :clean-up-target-dir true
                 :show false))
   opts)
+
+(comment
+  (build-site {}))
