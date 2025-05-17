@@ -49,6 +49,23 @@
 ;;
 ;; dimensions = d = 10.000
 ;;
+;; Using -1 and 1 as elements, we can denote
+;;
+;; `H` = {-1, 1}^10.000
+;;
+;; as the 10.000 dimensional hypervector space.
+;;
+;; - The hypervector is a point in hyperspace.
+;; - There are 2^10.000 points in the hypervector space.
+;;
+;; - 2 random hypervectors agree in 1/2 of the bits.
+;; - They have roughly 50% similarity.
+;; - The points are not clustered; But looking from one point,
+;;   the distances are highly concentrated mid-way into the space.
+;; - Quote Kanerva 2009: It is easy to see that half the space is closer to a point than 0.5 and the other half is further away, but it is somewhat surprising that less than a millionth of the space is closer than 0.476 and less than a thousand-millionth is closer than 0.47; similarly, less than a millionth is further than 0.524 away and less than a thousand-millionth is further than 0.53.
+;;
+;;
+;;
 ;; There are different flavors including sparse hypervectors
 ;; See
 ;; Schlegel et.al. 2021  A comparison of Vector Symbolic Architectures
@@ -78,6 +95,9 @@
 
 (take 10 (wl/! (seed)))
 
+
+;; Making a QR code kinda thing out of a hypervector:
+
 (defn plot
   [hd]
   (w/ArrayPlot (w/Plus 1
@@ -87,9 +107,8 @@
                                          dimensions)]))))
 
 
-(comment
-  (wh/view-no-summary
-   (wl/! (w/Block [(w/= 'x (plot (seed)))] 'x))))
+(wh/view-no-summary
+ (wl/! (w/Block [(w/= 'x (plot (seed)))] 'x)))
 
 ;; Go back to (mostly) -1 and 1's after superposition and such.
 
@@ -97,6 +116,7 @@
 
 (defn normalize [hd]
   `(~'normalize ~hd))
+
 
 ;; ## Similarity
 
@@ -117,6 +137,7 @@
 
 (defn distance [a b]
   `(~'distance ~a ~b))
+
 
 ;; ------
 ;; I use dot similarity for the rest of this page
@@ -140,12 +161,11 @@
 (defn similarity [a b]
   `(~'similarity ~a ~b))
 
-
 ;; 1. Pick a random hypervector a
 ;; 2. Pick 10.000 random hypervectors (n)
 ;; 3. Find the similarity between i = 0...n and a
 
-#_(wh/view-no-summary
+(wh/view-no-summary
  (w/ListPlot
   (w/Table
    `(~'similarity ~a ~'(seed))
@@ -153,8 +173,14 @@
   '(->
     AxesLabel ["n" "Similarity"])))
 
-;; ----------------------
 
+;; - In fact, you can pick and pick and keep picking and the similarity will be around 0.5.
+;; - The universe will run out of time before it runs out of hypervectors.
+;; - Hyperspace is 'seemingly infinite', this to me is an interesting property for a cogntive datatype.
+;; - I can recommend Kanerva 2009 and 'Sparse Distributed Memory' (1998) for more.
+;;
+
+;; ----------------------
 
 (wh/view-no-summary*
  (w/ListPlot (w/Table (similarity (seed) (seed)) 10))
@@ -312,10 +338,10 @@
 
   Bind is associative and commutative.
   Bind distributes over superposition and permutation.
+  Bind preserves similarity.
   "
   [& hdvs]
   `(~'bind ~@hdvs))
-
 
 (let [a (wl/! (seed))
       b (wl/! (seed))
@@ -332,9 +358,14 @@
 
    ;; Distributive over superposition
    (wl/! (w/== (superposition (bind a c) (bind b c))
-               (bind c (superposition a b))))])
+               (bind c (superposition a b))))
 
-
+   ;; preserve similarity
+   ;; It is like `a`, `b` and their relationship are perfectly mirrored in the `c` domain.
+   (wl/!
+    (w/==
+     (similarity a b)
+     (similarity (bind a c) (bind b c))))])
 
 
 ;; ### Identity
@@ -563,9 +594,6 @@
 ;; - ambiguity / continuity is first class.
 
 
-
-
-
 ;; -------
 ;; Dot similarity explorations:
 
@@ -606,10 +634,6 @@
     (similarity
      a
      (normalize (w/Plus a b c))))))
-
-
-
-
 
 
 ^:kindly/hide-code
