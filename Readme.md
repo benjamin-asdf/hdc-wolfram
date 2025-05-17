@@ -37,6 +37,7 @@
 # Build Docs
 
 - Depends on a Quarto install
+- Run `build-site` in build.clj
 
 # Dev
 

@@ -9,7 +9,7 @@
    ))
 
 ;;
-;; # HD/VSA MAP Intro
+;; # HD/VSA Intro
 ;;
 ;; https://github.com/benjamin-asdf/hdc-wolfram/issues/4
 ;;
@@ -26,16 +26,13 @@
 ;; - Instead of 64 bit words, use 10.000 bit words, **hypervectors** (HDV).
 ;; - This datatype together with a set of operations is a **Vector Symbolic Architecture**
 ;;
-
 ;; -----------------------
 
 ;; ## Multiply-Add-Permute (MAP)
 ;;
-;; A simple flavor of VSA where you use +, * and permute.
 ;;
 
 ;; # The Hypervector
-;; We call vectors of 1000+ bit lenght *hypervectors*
 
 ;;
 ;; ```
@@ -43,7 +40,6 @@
 ;;    | -1 1 -1 1 1 1 -1         |
 ;;    ----------------------------
 ;;               ------------> ,  d
-;;
 ;; ```
 ;;
 ;;
@@ -52,7 +48,7 @@
 ;;
 ;; Using -1 and 1 as elements, we can denote
 ;;
-;; `H` = {-1, 1}^10.000
+;; `H = {-1, 1}^10.000`
 ;;
 ;; as the 10.000 dimensional hypervector space.
 ;;
@@ -60,10 +56,16 @@
 ;; - There are 2^10.000 points in the hypervector space.
 ;;
 ;; - 2 random hypervectors agree in 1/2 of the bits.
-;; - They have roughly 50% similarity.
+;; - So they have roughly 50% similarity.
 ;; - The points are not clustered; But looking from one point,
 ;;   the distances are highly concentrated mid-way into the space.
-;; - Quote Kanerva 2009: It is easy to see that half the space is closer to a point than 0.5 and the other half is further away, but it is somewhat surprising that less than a millionth of the space is closer than 0.476 and less than a thousand-millionth is closer than 0.47; similarly, less than a millionth is further than 0.524 away and less than a thousand-millionth is further than 0.53.
+;;
+;; > It is easy to see that half the space is closer to a point than 0.5 and the other half is further away, but it is somewhat surprising that less than a millionth of the space is closer than 0.476 and less than a thousand-millionth is closer than 0.47; similarly, less than a millionth is further than 0.524 away and less than a thousand-millionth is further than 0.53.
+;; (Kanerva 2009)
+;;
+;; - Like picking a point, and flipping a coin for each bit.
+;; - The chance that more than half coin flips match becomes vanishingly low fast
+;; - Robustness: Even when something like 40% of the bits are missing, a hypervector can be recognized.
 ;;
 ;;
 ;;
@@ -73,24 +75,41 @@
 ;; http://www.arxiv.org/abs/2001.11797
 ;;
 
-
 ;; 10.000 dimensions is a common choice.
 (def dimensions (long 1e4))
+
 
 (wl/! (w/_= 'seed
             (w/fn []
               (w/Table (w/RandomChoice [-1 1])
                        [dimensions]))))
 
+(wl/->wl (w/_= 'seed
+               (w/fn []
+                 (w/Table (w/RandomChoice [-1 1])
+                          [dimensions]))))
+
+;; Use -1 and 1 as elements, make it `dimensions` wide.
+
+
 (wl/! (w/_= 'seedb
             (w/fn [n]
-              (w/Table (w/RandomChoice [-1 1])
-                       ['n n]
-                       ['k dimensions]))))
+              (w/Table (w/RandomChoice [-1 1]) ['i n] ['k dimensions]))))
+
+;; A fresh, random hypervector is also called seed,
+;; I think because you pick a fresh one when you encounter a new entity.
+;;
+;; Subsequently, we will operations that set these seeds into relationships.
 
 (defn seed
+  "Returns a fresh hypervector.
+  With `n` return a batch of `n` hypervectors.
+
+  Alias `random`.
+  "
   ([n] (list 'seedb n))
   ([] (list 'seed)))
+
 
 (count (wl/! (seed)))
 
@@ -111,12 +130,18 @@
 (wh/view-no-summary
  (wl/! (w/Block [(w/= 'x (plot (seed)))] 'x)))
 
-;; Go back to (mostly) -1 and 1's after superposition and such.
+;; ------------------
+
+;; After superposition, the hypervector contains 0 (ties), -2 and 2 elements.
+;; Sometimes, you want to normalize the hypervector to -1 and 1.
+;; In other VSA's, you might also thin a vector to a sparsity etc.
 
 (wl/! (w/_= 'normalize w/Sign))
 
-(defn normalize [hd]
-  `(~'normalize ~hd))
+(defn normalize
+  "Returns a normalized hypervector."
+  [hdv]
+  `(~'normalize ~hdv))
 
 
 ;; ## Similarity
@@ -150,17 +175,27 @@
 ;; -  `-1` for the negative (opposite) vector
 ;; -  `~0` for unrelated vectors
 ;; -   `1` for the equal vector
-;; -  `>1` if one of the vectors has values higher than 1 they agree
+;; -  `>1` if one of the vectors has values higher than 1 and they agree
 ;;
 ;;
+
 
 (wl/!
  (w/_= 'similarity
        (w/fn [a b]
          (w/Divide (w/Dot a b) dimensions))))
 
-(defn similarity [a b]
+(defn similarity
+  "Returns the dot similarity of the inputs.
+  Keeps batch dim."
+  [a b]
   `(~'similarity ~a ~b))
+
+(map float (wl/! (similarity (seed 10) (seed))))
+
+
+
+;; ### Experiment: picking unrelated hypervectors
 
 ;; 1. Pick a random hypervector a
 ;; 2. Pick 10.000 random hypervectors (n)
@@ -194,7 +229,6 @@
 
 ;; # Item Memory
 
-
 ;; Bookkeeping to go between HD/VSA domain and symbolic domain.
 
 ;; similiraty above 0.15 is almost certainly 'related' | 0.45 difference
@@ -207,9 +241,7 @@
   (let [items (into [] mem)
         hdvs (into [] (map val) items)
         ;; perf bottleneck, guessing the datatrensfers
-        similarities (wl/! (w/Map (w/fn [sim]
-                                    (w/Divide sim dimensions))
-                                  (w/Dot hdvs x)))]
+        similarities (wl/! (similarity hdvs x))]
       (->> (map-indexed vector similarities)
            (filter (comp #(<= threshold %) second))
            (sort-by second (fn [a b] (compare b a)))
@@ -240,11 +272,17 @@
 ;; ------
 
 ;; # Vector Symbolic Arithmetic (VSA)
+;;
+;; VSA stands sometimes for Vector Symbolic Architecture, sometimes for Vector Symbolic Arithmetic or also Algebra.
+;;
+;; > Arithmetic: the use of numbers in counting and calculation.
+;;
+;; I am sort of hesitant to say 'architecture' to a set of operations. I go with 'arithmetic'.
 
 ;;
-;; Asking what could the ALU operations of this hyperdimensional computer be.
+;; Asking what could the Arithmetic logic unit (ALU) operations of this hyperdimensional computer be?
 ;;
-;; These operations return the same datatype as the inputs, hypervectors of the same length.
+;; These operations return the same datatype as the inputs - hypervectors of the same length.
 ;; In programming, we say the VSA is closed under the hypervector.
 ;;
 
