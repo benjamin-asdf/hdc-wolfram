@@ -395,7 +395,7 @@
    (wl/! (w/== (bind a b) (bind b a)))
 
    ;; Associative
-   (wl/! (w/== (bind (bind a b) c) (bind (bind a b) c)))
+   (wl/! (w/== (bind (bind a b) c) (bind a (bind b c))))
 
    ;; Distributive over superposition
    (wl/! (w/== (superposition (bind a c) (bind b c))
