@@ -76,30 +76,18 @@
 ;;
 
 ;; 10.000 dimensions is a common choice.
-(def dimensions (long 1e4))
 
+(def dimensions (long 1e4))
 
 (wl/! (w/_= 'seed
             (w/fn []
               (w/Table (w/RandomChoice [-1 1])
                        [dimensions]))))
 
-(wl/->wl (w/_= 'seed
-               (w/fn []
-                 (w/Table (w/RandomChoice [-1 1])
-                          [dimensions]))))
-
-;; Use -1 and 1 as elements, make it `dimensions` wide.
-
-
 (wl/! (w/_= 'seedb
             (w/fn [n]
               (w/Table (w/RandomChoice [-1 1]) ['i n] ['k dimensions]))))
 
-;; A fresh, random hypervector is also called seed,
-;; I think because you pick a fresh one when you encounter a new entity.
-;;
-;; Subsequently, we will operations that set these seeds into relationships.
 
 (defn seed
   "Returns a fresh hypervector.
@@ -115,6 +103,14 @@
 
 (take 10 (wl/! (seed)))
 
+;; A fresh, random hypervector is also called seed,
+;; I think because you pick a fresh one when you encounter a new entity.
+;;
+;; Subsequently, we will operations that set these seeds into relationships.
+
+;; ------
+
+;; ## Visualizing a hypervector
 
 ;; Making a QR code kinda thing out of a hypervector:
 
@@ -132,6 +128,8 @@
 
 ;; ------------------
 
+;; ## Normalize
+
 ;; After superposition, the hypervector contains 0 (ties), -2 and 2 elements.
 ;; Sometimes, you want to normalize the hypervector to -1 and 1.
 ;; In other VSA's, you might also thin a vector to a sparsity etc.
@@ -143,32 +141,23 @@
   [hdv]
   `(~'normalize ~hdv))
 
-
 ;; ## Similarity
 
-;; For example Hamming distance, counting the bits that are different:
-
-(wl/! (w/HammingDistance [-1 1 1] [-1 1 1]))
-
-(wl/! (w/HammingDistance [-1 -1 1] [-1 1 1]))
-
-(wl/! (w/HammingDistance [1 -1 -1] [-1 1 1]))
+;; Hamming distance counts the bits that are different.
 
 (wl/! (w/HammingDistance (seed) (seed)))
 
-(wl/! (w/_= 'distance
-            (w/fn [a b]
-              (w/Divide (w/HammingDistance a b) dimensions))))
+;; It is always roughly 0.5 for 2 random hypervectors.
+
+;; - Imagine picking a hypervector, then flipping a coin for each bit.
+;; - The differences between all other hypervectors and the picked one follow a binomial distribution.
 
 
-(defn distance [a b]
-  `(~'distance ~a ~b))
-
-
-;; ------
-;; I use dot similarity for the rest of this page
 
 ;; ## Dot similarity
+
+;;
+;; I use 'dot similarity' for the rest of this page
 
 ;; - Counts where the vectors agree minus where they disagree
 ;; - Divide by dimensions
@@ -178,7 +167,6 @@
 ;; -  `>1` if one of the vectors has values higher than 1 and they agree
 ;;
 ;;
-
 
 (wl/!
  (w/_= 'similarity
@@ -192,8 +180,6 @@
   `(~'similarity ~a ~b))
 
 (map float (wl/! (similarity (seed 10) (seed))))
-
-
 
 ;; ### Experiment: picking unrelated hypervectors
 
@@ -211,10 +197,16 @@
   '(->
     AxesLabel ["n" "Similarity"])))
 
-
-;; - In fact, you can pick and pick and keep picking and the similarity will be around 0.5.
+;; - In fact, you can pick and pick and keep picking and the similarity will be around 0. (0.5 difference)
 ;; - The universe will run out of time before it runs out of hypervectors.
-;; - Hyperspace is 'seemingly infinite', this to me is an interesting property for a cogntive datatype.
+;; - Hyperspace is 'seemingly infinite', this property alone is interesting for a cogntive datatype.
+
+;; ### Robustness
+
+;; Experiment:
+;; TODO
+
+
 ;; - I can recommend Kanerva 2009 and 'Sparse Distributed Memory' (1998) for more.
 ;;
 
@@ -231,7 +223,7 @@
 
 ;; Bookkeeping to go between HD/VSA domain and symbolic domain.
 
-;; similiraty above 0.15 is almost certainly 'related' | 0.45 difference
+;; similiraty above 0.15 is almost certainly 'related'
 (def default-threshold 0.15)
 
 (defn ->item-memory [] {})
@@ -608,23 +600,24 @@
 
 ;; Superposition enables 'programming in superposition'.
 
-(let [rec (wl/!
-           (record
-            [[(book-keep! :x) (book-keep! 1)]
-             [(book-keep! :y) (book-keep! 2)]
-             [(book-keep! :z) (superposition
-                               (book-keep! 1)
-                               (book-keep! 2)
-                               (book-keep! 3))]]))]
+(def record-xyz (wl/!
+                 (record
+                  [[(book-keep! :x) (book-keep! 1)]
+                   [(book-keep! :y) (book-keep! 2)]
+                   [(book-keep! :z) (superposition
+                                     (book-keep! 1)
+                                     (book-keep! 2)
+                                     (book-keep! 3))]])))
 
 
-  [
-   ;; the value in the :x domain is 1
-   (item-cleanup (bind rec (book-keep! :x)))
-   ;; the value in the :y domain is 2
-   (item-cleanup (bind rec (book-keep! :y)))
-   ;; the value in the :z domain is the superposition of 1,2,3
-   (item-cleanup (bind rec (book-keep! :z)))])
+;; the value in the :x domain is 1
+(item-cleanup (bind record-xyz (book-keep! :x)))
+
+;; the value in the :y domain is 2
+(item-cleanup (bind record-xyz (book-keep! :y)))
+
+;; the value in the :z domain is the superposition of 1,2,3
+(item-cleanup (bind record-xyz (book-keep! :z)))
 
 
 ;; Programming in superposition...
