@@ -89,8 +89,6 @@ nil
 ;; Uninitialized -> Initialized -> Synchronized
 
 
-
-
 (def firstkernel
   "__global__ void addTwo_kernel(mint * arry, mint len) {
 

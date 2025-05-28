@@ -8,454 +8,187 @@
    ;; [scicloj.clay.v2.api :as clay]
    [wolframite.impl.wolfram-syms.intern :as wi]))
 
-;; High-dimensional computing with sparse vectors
-;; https://ieeexplore.ieee.org/document/7348414
+
+
+
+;; hmmm,
+;; not sure
+
+
+(defprotocol WolframRef
+  "A protocol for Wolfram references."
+  (wolfram-ref [this]
+    "Return the Wolfram reference for this object.")
+  (wolfram-sym [this]
+    "Return the Wolfram symbol for this object."))
+
+(let [counter (atom 0)]
+  (defn wolfram-gensym
+    [{:keys [prefix]}]
+    (let [dat {:sym (symbol (str "hdcWolfram" (swap! counter inc)))}]
+      (reify
+        WolframRef
+          (wolfram-sym [_] (:sym dat))
+        clojure.lang.IDeref
+          (deref [_] (wl/! (w/Normal (:sym dat))))
+        clojure.lang.IPending
+        (isRealized [_] false)))))
 
 (def ^:dynamic default-opts
   {:bsbc/segment-count 20
    :bsbc/segment-length 500})
 
-(wl/! "Needs[\"CUDALink`\"]")
+(defn seed
+  "Return a fresh block sparse hypervector."
+  ([] (seed default-opts))
+  ([{:bsbc/keys [segment-count segment-length]}]
+   (let [sym (wolfram-gensym {:prefix "hd"})]
+     (wl/! (w/do (w/= (wolfram-sym sym)
+                      (w/SparseArray
+                        (w/Table (w/-> (w/+ (w/* 'seg segment-length)
+                                            (w/RandomInteger
+                                              [1 segment-length]))
+                                       1)
+                                 ['seg 0 (w/- segment-count 1)])
+                        [(* segment-count segment-length)]
+                        0))))
+     sym)))
 
-(wl/!
- "vec = CUDASparseVector[ SparseArray[Table[{i} -> i, {i, 3}]], \"Real64\"];")
+(comment
+  (def segment-count 2)
+  (def segment-length 3)
+  (* 2 3)
 
-(wl/! "Normal[Normal[vec]]")
-
-(wl/! "v = Table[{i} -> i, {i, 3}]")
-
-(wl/! (w/Normal (w/SparseArray [(w/-> [1] 1) (w/-> [2] 2) (w/-> [3] 3)])))
-
-
-
-
-(def seg-count 20)
-(def seg-length 500)
-
-(wl/! (w/do
-        (w/= 'a
-             (w/SparseArray
-              (into []
-                    (comp (map (fn [segment]
-                                 (+ (* segment seg-length)
-                                    (rand-int seg-length))))
-                          (map (fn [idx]
-                                 (w/-> idx
-                                       1))))
-                    (range seg-count))
-              [(* seg-length seg-count)]
-              0))
-        [(* seg-length seg-count)]))
-
-
-(wl/!
- (w/_=
-  'seed
-  (let [v 'vec]
-    (w/fn []
-      (w/do (w/= 'v
-                 (w/SparseArray
-                  (into []
-                        (comp (map (fn [segment]
-                                     (+ (* segment seg-length)
-                                        (rand-int
-                                         seg-length))))
-                              (map (fn [idx]
-                                     (w/-> idx
-                                           1))))
-                        (range seg-count))
-                  [(* seg-length seg-count)]
-                  0))
-            (w/= v (list 'CUDASparseVector 'v "Real32"))
-            [(* seg-length seg-count)])))))
-
-
-(defn seed-1
-  [v]
-  (wl/!
-   (w/do
-     (w/= 'v
-          (w/SparseArray
-           (into []
-                 (comp (map (fn [segment]
-                              (+ (* segment seg-length)
-                                 (rand-int
-                                  seg-length))))
-                       (map (fn [idx]
-                              (w/-> idx 1))))
-                 (range seg-count))
-           [(* seg-length seg-count)]
-           0))
-     (w/= v (list 'CUDASparseVector 'v "Real32"))
-     [(* seg-length seg-count)])))
-
-(wl/! (list 'seed))
-(wl/! "Normal[Normal[vec]]")
-
-(seed-1 'a)
-(seed-1 'b)
-
-(wl/! (w/Dot (list 'Normal (list 'Normal 'a))
-             (list 'Normal (list 'Normal 'b))))
-
-(wl/! (list 'Normal (list 'Normal 'a)))
-
-
-(wl/!  (list 'CUDAMemoryGet 'a))
-
-
-
-;; CUDAMemoryGet[CUDAMemoryLoad[Range[10]]]
-
-(defn dot
-  [a b]
-  (wl/!
-   (w/do
-     (w/= 'out (list 'CUDADot a b))
-     (list 'Normal 'out))))
-
-
-
-
-(dot 'a 'a)
-(dot 'a 'b)
-
-(wl/! "out = CUDADot[a,b];")
-(wl/! "Normal[out]")
-(wl/! "out = CUDADot[b,b];")
-(wl/! "Normal[out]")
-
-
-(def address-matrix "addr matrix" 'addrmatrix)
-
-(def address-length (* 20 500))
-(def address-count (long 1e4))
-;; 0.000003
-(def density 0.002)
-
-(let [address-count 3
-      address-length 2
-      density 0.5]
-  (wl/!
-   (w/do
-     (w/= 'v
-          (w/SparseArray
-           (w/Map
-            (w/fn [p] (w/-> p 1))
-            (w/DeleteDuplicates
-             (w/Table
-              [(w/RandomInteger address-count)
-               (w/RandomInteger address-length)]
-              ['i (* address-count address-length density)])))
-           [address-count address-length]
-           0))
-     ;; (w/= address-matrix (list 'CUDASparseMatrix 'v "Real32"))
-     ;; (w/= address-matrix (list 'CUDASparseMatrix 'v "Real64"))
-     ;; [address-count address-length]
-     (w/Normal 'v))))
-
-
-(let [address-count 500
-      address-length 10
-      density 0.1]
   (wl/! (w/Normal
          (w/SparseArray
-          (w/Map (w/fn [p]
-                   (w/-> p
-                         1))
-                 (w/DeleteDuplicates
-                  (w/Table
-                   [(w/RandomInteger [1 address-count])
-                    (w/RandomInteger [1 address-length])]
-                   ['i
-                    (* address-count address-length density)])))
-          [address-count address-length]
+          (w/Table
+           (w/->
+            (w/+
+             (w/* 'seg segment-length)
+             (w/RandomInteger [1 segment-length]))
+            1)
+           ['seg 0 (w/- segment-count 1)])
+          [(* segment-count segment-length)]
           0))))
 
-
-(let [address-count 500
-      address-length 10
-      density 0.1]
-  (wl/!
-   (w/do
-     (w/= 'v
-          (w/SparseArray
-           (w/Map
-            (w/fn [p]
-              (w/-> p
-                    1))
-            (w/DeleteDuplicates
-             (w/Table
-              [(w/RandomInteger [1 address-count])
-               (w/RandomInteger [1 address-length])]
-              ['i
-               (* address-count address-length density)])))
-           [address-count address-length]
-           0))
-     (w/= address-matrix (list 'CUDASparseMatrix 'v "Real32"))
-     [address-count address-length])))
-
-(wl/! (w/Normal (w/Normal address-matrix)))
-
 (wl/!
- (w/do
-   (w/= 'v
-        (w/SparseArray
-         (w/Map
-          (w/fn [p]
-            (w/-> p
-                  1))
-          (w/DeleteDuplicates
-           (w/Table
-            [(w/RandomInteger [1 address-count])
-             (w/RandomInteger [1 address-length])]
-            ['i
-             (* address-count address-length density)])))
-         [address-count address-length]
-         0))
-   (w/= address-matrix (list 'CUDASparseMatrix 'v "Real32"))
-   [address-count address-length]))
+ (w/= 'similarity
+      (w/fn [a b]
+        (w/Divide (w/Dot a b)
+                  (:bsbc/segment-count default-opts)))))
 
+(defn similarity
+  "Return the similarity between two block sparse hypervectors."
+  [a b]
+  (wl/! (list 'similarity
+              (wolfram-sym a)
+              (wolfram-sym b))))
 
-(wl/! (w/= 'out (list 'CUDADot address-matrix 'a)))
+(w/! (w/= 'superposition w/Plus))
 
-(time
- (do
-   ;; (wl/! "dout = ;")
-   (wl/! "maxarg = CUDAArgMaxList[CUDADot[addrmatrix,a]];")
-   (wl/! (w/Normal 'maxarg))))
+(defn superposition
+  "Return the superposition of two block sparse hypervectors."
+  [a b]
+  (wl/! (list 'superposition (wolfram-sym a) (wolfram-sym b))))
 
+(defn bind
+  "Return a new hypervector that is the binding of two block sparse hypervectors.
 
-(wl/! "i = CUDAMemoryInformation[a];")
-(wl/! (w/Normal 'i))
 
 
+  This is a context dependent thinning.
 
-
-(time
- (do
-   ;; (wl/! "dout = ;")
-   (wl/! "maxarg = CUDAArgMaxList[CUDADot[addrmatrix,a]];")
-   (wl/! (w/Normal 'maxarg))))
-
-(time
- (do
-   ;; (wl/! "dout = ;")
-   (wl/! "Normal[ CUDAArgMaxList[CUDADot[addrmatrix,a]]]")))
-
-
-
-
-
-(wl/! "CUDAArgMaxList[CUDAVector[1.0*Range[10000000, 0, -1], \"Real32\"]]")
-
-
-(dot address-matrix 'a)
-
-(time
- (wl/!
-  (w/do
-    (wl/! "out = CUDAArgMaxList[CUDADot[addrmatrix,a]];")
-    (w/Normal 'out))))
-
-
-
-(let [address-count 1
-      ;; (long 1e5)
-      density 0.5]
-  (wl/!
-   (w/do
-     (w/= 'addrmatrix
-          (w/SparseArray
-           (w/Map (w/fn [p]
-                    (w/-> p 1))
-                  (w/DeleteDuplicates
-                   (w/Table
-                    [(w/RandomInteger [1 address-count])
-                     (w/RandomInteger [1 address-length])]
-                    ['i
-                     (* address-count address-length density)])))
-           [address-count
-            address-length]
-           0))
-     [])))
-
-(wl/!
- (w/do
-   (w/= 'bvec
-        (w/SparseArray
-         (into []
-               (comp (map (fn [segment]
-                            (+ (* segment seg-length)
-                               (rand-int seg-length))))
-                     (map (fn [idx] (w/-> idx 1))))
-               (range seg-count))
-         [(* seg-length seg-count)]
-         0))
-   [(* seg-length seg-count)]))
-
-
-(wl/! "addrmM = CUDAMemoryLoad[addrmatrix];")
-(wl/! "bvegM = CUDAMemoryLoad[bvec];")
-
-(wl/! "CUDAMemoryInformation[addrmatrix]")
-(wl/! "Normal[meminfo]")
-
-(time
- (wl/!
-  (w/do
-    (wl/! "out = CUDAArgMaxList[CUDADot[addrmM,bvegM]];")
-    (w/Normal 'out))))
-
-(time
- (wl/!
-  (w/do
-    (wl/! "out = CUDADot[addrmatrix,bvec];")
-    (w/Normal 'out))))
-
-(time
- (wl/!
-  (w/do
-    (wl/! "out = CUDADot[addrmM,bvegM];")
-    (w/Normal 'out))))
-
-
-(time
- (wl/!
-  (w/do
-    (wl/! "out = Dot[addrmatrix,bvec];")
-    (w/Normal 'out))))
-
-(wl/!
- (w/do
-   (w/= 'out
-        (list
-         'CUDAMap 'Ceiling
-         (w/RandomReal 1 10)))
-   (w/Normal (w/Normal 'out))))
-
-
-(wl/!
- (w/_= 'vec2 (list 'CUDASparseVector (w/SparseArray [[1]] [5 10]))))
-(wl/! "Normal[Normal[vec2]]")
-
-(def vec3 "sparse vec" 'vec3)
-
-(wl/! (w/do
-        (w/= 'myvec (list 'CUDAVector [1. 2. 3.]))
-        :ok))
-
-(wl/! "Normal[Normal[myvec]]")
-
-
-
-
-(do (wl/! (w/do (w/= 'myvec
-                     (list 'CUDASparseVector
-                           (w/SparseArray [1. 2. 3.])
-                           "Real64"))
-                :ok))
-    (wl/! "Normal[Normal[myvec]]"))
-
-
-(do (wl/! (w/do (w/= 'myvec
-                     (list 'CUDASparseVector
-                           (w/SparseArray [0 1 0])
-                           "Real"))
-                :ok))
-    (wl/! "Normal[Normal[myvec]]"))
-
-
-
-(do
-  (wl/!
-   (w/do (w/= 'myvec (list 'CUDASparseVector (w/SparseArray [0 1 0]) "Real32")) :ok))
-  (wl/! "Normal[Normal[myvec]]"))
-
-
-
-
-(wl/! (w/AbsoluteTiming (w/do (w/Dot 'randM 'randM)    nil)))
-(time (wl/! (w/do (w/Dot 'randM 'randM) nil)))
-(time (wl/! (w/do (list 'CUDADot 'randM 'randM) nil)))
-
-
-
-(time (wl/! "randM = RandomReal[1, {4000, 4000}];"))
-(time (wl/! "CUDADot[randM,randM];"))
-(time (wl/! "randMG = CUDAMemoryLoad[randM];"))
-(time (wl/! "res = CUDADot[randMG,randMG];"))
-
-
-
-
-
-
-
-
-
-
-(do
-  (wl/! "Needs[\"CUDALink`\"]")
-  (wl/! "v = SparseArray[Table[{i} -> i, {i, 3}]];")
-  (wl/! "spv = CUDASparseVector[v,\"Real64\"];")
-  (wl/! "Normal[v]")
-  (wl/! "Normal[Normal[spv]]"))
-
-
-(do
-  (wl/! "Needs[\"CUDALink`\"]")
-  (wl/! "v = SparseArray[Table[{i} -> i, {i, 3}]];")
-  (wl/! "spv = CUDASparseVector[v,\"Real64\"];")
-  (wl/! "Normal[v]")
-  (wl/! "Normal[Normal[spv]]"))
-
-
-(do
-  (wl/! "Needs[\"CUDALink`\"]")
-  (wl/! "vec = CUDASparseVector[ SparseArray[Table[{i} -> i, {i, 3}]], \"Real64\"];")
-  (wl/! "Normal[Normal[vec]]"))
-
-
-
-
-
-
-
-
-
-
-
-(wl/! 'myvec)
-(wl/! (list 'CUDADot 'myvec 'myvec))
-
-(wl/!
- (w/do
-   ;; (w/= 'v (w/SparseArray [[0 1]] [5 10]))
-   (w/= vec3 (list 'CUDASparseVector
-                   (w/SparseArray
-                    [(w/-> [1] 1)
-                     (w/-> [2] 2)
-                     (w/-> [3] 3)])))
-   nil))
-
-(wl/! (w/Normal vec3))
-
-
-(wl/! (w/Normal (w/SparseArray [[0 1]] [5 10])))
-(wl/! (w/Normal (w/SparseArray [[0 1]] [5 10])))
-
-
-
-
-
-(defn seed [n {:bsbc/keys [segment-count segment-length]}]
-
+  "
+  [a b]
 
   )
+
+(wl/! (w/ArgMax w/Identity (wolfram-sym a)))
+
+(wl/! (w/Normal (w/ArrayReshape (wolfram-sym a)
+                                [(:bsbc/segment-count
+                                  default-opts)])))
+
+;; hm, best make indices, sum them and then take the remainder
+
+(wl/!
+ (w/Part
+  (w/ArrayReshape (wolfram-sym a)
+                  [(:bsbc/segment-count default-opts)
+                   (:bsbc/segment-length default-opts)])
+  "NonzeroPositions"))
+
+(wl/! "hdcWolfram18[\"NonzeroPositions\"]")
+
+
+
+
+(remove zero? (take 500 @a))
+
+(def a (seed))
+(def b (seed))
+
+(wl/! (similarity a b))
+(similarity a a)
+(similarity a b)
+
+(time (wl/! (w/Dot (wolfram-sym a) (wolfram-sym b))))
+(time (wl/! (w/Dot (wolfram-sym a) (wolfram-sym b))))
+
+
+
+(wl/! (w/Normal (seed)))
+
+
+; Find max index for each segment
+(defn max-index-per-segment
+  "Return the maximum index for each segment."
+  [hv]
+  (wl/! (w/Map w/Max
+               (w/Map (w/fn [seg]
+                        (w/Select (w/Range 1 (:bsbc/segment-length default-opts))
+                                  (w/fn [i] (w/Not (w/== (w/Part seg i) 0)))))
+                      (w/ArrayReshape
+                        (wolfram-sym hv)
+                        [(:bsbc/segment-count default-opts)
+                         (:bsbc/segment-length default-opts)])))))
+
+
+
+(max-index-per-segment a)
+[210 460 364 314 223 370 207 87 471 84 373 3 317 204 347 266 137 93 33 73]
+(nth @a (inc 210))
+(nth @a (dec 210))
+
+(wl/! (w/ArgMax [1 2 3]))
+
+;; ArgMax for each segment (like torch.argmax)
+(defn argmax-per-segment
+  "Return the argmax (position of maximum value) for each segment."
+  [hv]
+  (wl/!
+   (w/Map
+    (w/fn [seg] (w/Ordering seg -1))
+    (w/ArrayReshape hv
+                    [(:bsbc/segment-count default-opts)
+                     (:bsbc/segment-length default-opts)]))))
+
+(argmax-per-segment (wolfram-sym a))
+
+(wl/! (w/Ordering (wolfram-sym a) -1))
+
+
+
+
+(wl/!
+ (w/Times
+  (w/Range 1 (:bsbc/segment-length default-opts))
+  [0 0 1 0 0]
+  ;; (wolfram-sym a)
+  ))
 
 
 
 (comment
-  (wl/stop!)
-  (wl/start!))
+  (wl/start!)
+  (wl/stop!))
