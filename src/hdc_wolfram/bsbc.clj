@@ -6,189 +6,289 @@
    [wolframite.tools.hiccup :as wh]
    [wolframite.wolfram :as w]
    ;; [scicloj.clay.v2.api :as clay]
-   [wolframite.impl.wolfram-syms.intern :as wi]))
-
-
-
+   [wolframite.impl.wolfram-syms.intern :as wi])
+  ;; (:refer-clojure :exclude [empty])
+  )
 
 ;; hmmm,
 ;; not sure
 
-
-(defprotocol WolframRef
-  "A protocol for Wolfram references."
-  (wolfram-ref [this]
-    "Return the Wolfram reference for this object.")
-  (wolfram-sym [this]
-    "Return the Wolfram symbol for this object."))
-
 (let [counter (atom 0)]
-  (defn wolfram-gensym
+  (defn w-gensym
     [{:keys [prefix]}]
-    (let [dat {:sym (symbol (str "hdcWolfram" (swap! counter inc)))}]
-      (reify
-        WolframRef
-          (wolfram-sym [_] (:sym dat))
-        clojure.lang.IDeref
-          (deref [_] (wl/! (w/Normal (:sym dat))))
-        clojure.lang.IPending
-        (isRealized [_] false)))))
+    (symbol (str "hdcWolfram" (swap! counter inc)))))
 
-(def ^:dynamic default-opts
-  {:bsbc/segment-count 20
-   :bsbc/segment-length 500})
+(defn wsym
+  [opts expr]
+  (let [sym (w-gensym opts)]
+    (wl/! (w/do (w/= sym expr)))
+    sym))
+
+(def default-opts
+  ;; {:bsbc/segment-length 3 :bsbc/segment-count 3}
+  {:bsbc/segment-length 500
+   :bsbc/segment-count 20})
+
+(defn wforce [s] (wl/! (w/Normal s)))
+
+(wl/! (w/= 'fromIndices
+           (w/fn [indices segmentcount segmentlength]
+             (let [idxs (->> indices
+                             (w/+ 1)
+                             (w/+ (w/Range 0
+                                           (w/* (w/- segmentcount 1) segmentlength)
+                                           segmentlength))
+                             (w/Flatten)
+                             (w/Map (w/fn [idx]
+                                      (w/-> idx 1))))]
+               (w/SparseArray idxs [(w/* segmentcount segmentlength)] 0)))))
+
+(wl/!
+ (w/=
+  'zeros
+  (w/fn [segmentcount segmentlength]
+    (w/SparseArray (w/Table 0 [(w/* segmentcount segmentlength)])))))
+
+(defn zeros []
+  (list 'zeros
+        (:bsbc/segment-count default-opts)
+        (:bsbc/segment-length default-opts)))
+
+(wl/! (w/= 'ones
+           (w/fn [segmentcount segmentlength]
+             (w/SparseArray (w/Table 1 [(w/* segmentcount segmentlength)])))))
+
+(defn ones
+  []
+  (list 'ones
+        (:bsbc/segment-count default-opts)
+        (:bsbc/segment-length default-opts)))
+
+
+;; identity hd was hard to think about with 1 based indices
+(defn from-indices
+  "Whatch out: these are zero based indices."
+  [indices]
+  (list 'fromIndices
+        indices
+        (:bsbc/segment-count default-opts)
+        (:bsbc/segment-length default-opts)))
+
+(wl/! (w/= 'indices
+           (w/fn [hd segmentlength]
+             (w/Map (w/fn [seg]
+                      (w/- (w/Part (w/Position (w/Normal seg) (w/Max seg)) 1)
+                           1))
+                    (w/Partition hd [segmentlength])))))
+
+(defn indices
+  "Returns hd indices.
+
+  Watch out: These are zero based.
+  "
+  [hd]
+  (list 'indices hd (:bsbc/segment-length default-opts)))
+
+(wl/! (w/= 'randomIndices
+           (w/fn [segmentcount segmentlength]
+             (w/Table (w/RandomInteger [0 (w/- segmentlength 1)])
+                      ['seg 0 (w/- segmentcount 1)]))))
+
+(wl/! (w/= 'seed
+           (w/fn [segmentcount segmentlength]
+             (from-indices (list 'randomIndices segmentcount segmentlength)))))
 
 (defn seed
   "Return a fresh block sparse hypervector."
   ([] (seed default-opts))
   ([{:bsbc/keys [segment-count segment-length]}]
-   (let [sym (wolfram-gensym {:prefix "hd"})]
-     (wl/! (w/do (w/= (wolfram-sym sym)
-                      (w/SparseArray
-                        (w/Table (w/-> (w/+ (w/* 'seg segment-length)
-                                            (w/RandomInteger
-                                              [1 segment-length]))
-                                       1)
-                                 ['seg 0 (w/- segment-count 1)])
-                        [(* segment-count segment-length)]
-                        0))))
-     sym)))
+   (list 'seed segment-count segment-length)))
 
-(comment
-  (def segment-count 2)
-  (def segment-length 3)
-  (* 2 3)
-
-  (wl/! (w/Normal
-         (w/SparseArray
-          (w/Table
-           (w/->
-            (w/+
-             (w/* 'seg segment-length)
-             (w/RandomInteger [1 segment-length]))
-            1)
-           ['seg 0 (w/- segment-count 1)])
-          [(* segment-count segment-length)]
-          0))))
+(defn wseed []
+  (wsym {:prefix "hd"} (seed default-opts)))
 
 (wl/!
  (w/= 'similarity
-      (w/fn [a b]
-        (w/Divide (w/Dot a b)
-                  (:bsbc/segment-count default-opts)))))
+      (w/fn [a b segmentcount]
+        (w/Divide
+         (w/Dot a b)
+         segmentcount))))
 
 (defn similarity
   "Return the similarity between two block sparse hypervectors."
   [a b]
-  (wl/! (list 'similarity
-              (wolfram-sym a)
-              (wolfram-sym b))))
+  (list 'similarity a b (:bsbc/segment-count default-opts)))
 
-(w/! (w/= 'superposition w/Plus))
+(wl/! (w/= 'superposition w/Plus))
 
 (defn superposition
   "Return the superposition of two block sparse hypervectors."
   [a b]
-  (wl/! (list 'superposition (wolfram-sym a) (wolfram-sym b))))
+  (list 'superposition a b))
+
+(wl/! (w/= 'bind1
+           (w/fn [a b alpha segmentcount segmentlength]
+             (-> (w/+ (indices a)
+                      ;; todo fix multiarity
+                      (w/* alpha (indices b)))
+                 (w/Mod segmentlength)
+                 (from-indices)))))
 
 (defn bind
   "Return a new hypervector that is the binding of two block sparse hypervectors.
 
 
-
   This is a context dependent thinning.
 
   "
+  ([a b] (bind a b 1))
+  ([a b alpha]
+   (list 'bind1
+         a
+         b
+         alpha
+         (:bsbc/segment-count default-opts)
+         (:bsbc/segment-length default-opts))))
+
+(defn unbind
+  "Returns a new hypervector where b is unbound from a."
   [a b]
-
-  )
-
-(wl/! (w/ArgMax w/Identity (wolfram-sym a)))
-
-(wl/! (w/Normal (w/ArrayReshape (wolfram-sym a)
-                                [(:bsbc/segment-count
-                                  default-opts)])))
-
-;; hm, best make indices, sum them and then take the remainder
+  (bind a b -1))
 
 (wl/!
- (w/Part
-  (w/ArrayReshape (wolfram-sym a)
-                  [(:bsbc/segment-count default-opts)
-                   (:bsbc/segment-length default-opts)])
-  "NonzeroPositions"))
+ (w/= 'identityHd
+      (w/fn [segmentcount]
+        (from-indices (w/Table 0 segmentcount)))))
 
-(wl/! "hdcWolfram18[\"NonzeroPositions\"]")
+(defn identity-hd
+  "Returns the hd that is the identity element of [[bind]]."
+  []
+  (list 'identityHd (:bsbc/segment-count default-opts)))
 
+(wl/! (w/= 'inverse
+           (w/fn [hd segmentcount segmentlength]
+             (from-indices
+              (w/Mod (w/- segmentlength (indices hd))
+                     segmentlength)))))
 
+(defn inverse
+  "Returns the inverse of `hd`.
 
+  Bind with the inverse vector is equivalent to unbind."
+  [hd]
+  (list 'inverse
+        hd
+        (:bsbc/segment-count default-opts)
+        (:bsbc/segment-length default-opts)))
 
-(remove zero? (take 500 @a))
+(wl/!
+ (w/=
+  'normalize
+  (w/fn [hd]
+    (from-indices (indices hd)))))
 
-(def a (seed))
-(def b (seed))
+(defn normalize [hd]
+  (list 'normalize hd))
 
-(wl/! (similarity a b))
-(similarity a a)
-(similarity a b)
+(comment
+  (wforce (wseed))
+  (def a (wseed))
+  (def b (wseed))
+  (wforce (similarity a (unbind (bind a b) b)))
 
-(time (wl/! (w/Dot (wolfram-sym a) (wolfram-sym b))))
-(time (wl/! (w/Dot (wolfram-sym a) (wolfram-sym b))))
+  (def addresscount (long 1e6))
+  (def addrwordlength
+    (*
+     (:bsbc/segment-length default-opts)
+     (:bsbc/segment-count default-opts)))
+  (def density 0.0003)
 
+  (def address-matrix
+    (wsym
+     (w/SparseArray
+      (w/Table (w/-> [1 1] 1) [])))
 
+    )
 
-(wl/! (w/Normal (seed)))
-
-
-; Find max index for each segment
-(defn max-index-per-segment
-  "Return the maximum index for each segment."
-  [hv]
-  (wl/! (w/Map w/Max
-               (w/Map (w/fn [seg]
-                        (w/Select (w/Range 1 (:bsbc/segment-length default-opts))
-                                  (w/fn [i] (w/Not (w/== (w/Part seg i) 0)))))
-                      (w/ArrayReshape
-                        (wolfram-sym hv)
-                        [(:bsbc/segment-count default-opts)
-                         (:bsbc/segment-length default-opts)])))))
-
-
-
-(max-index-per-segment a)
-[210 460 364 314 223 370 207 87 471 84 373 3 317 204 347 266 137 93 33 73]
-(nth @a (inc 210))
-(nth @a (dec 210))
-
-(wl/! (w/ArgMax [1 2 3]))
-
-;; ArgMax for each segment (like torch.argmax)
-(defn argmax-per-segment
-  "Return the argmax (position of maximum value) for each segment."
-  [hv]
   (wl/!
-   (w/Map
-    (w/fn [seg] (w/Ordering seg -1))
-    (w/ArrayReshape hv
-                    [(:bsbc/segment-count default-opts)
-                     (:bsbc/segment-length default-opts)]))))
+   (w/Normal (w/SparseArray
+              (w/Table
+               (w/-> ['n 'j] 1)
+               ['n 10 'j 10]))))
 
-(argmax-per-segment (wolfram-sym a))
+  (wl/!
+   (w/Table
+    (w/-> ['n 'j]
+          1)
+    ['n 10]
+    ['j 10]
+    ;; [['n 10] ['j 10]]
+    ))
 
-(wl/! (w/Ordering (wolfram-sym a) -1))
+
+
+
+  (wl/!
+   (w/Table
+    (w/Table (w/-> ['n 'j] 1) ['j 10])
+    ['n 10])))
 
 
 
 
-(wl/!
- (w/Times
-  (w/Range 1 (:bsbc/segment-length default-opts))
-  [0 0 1 0 0]
-  ;; (wolfram-sym a)
-  ))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 (comment
+  ;; ----------------
+  (bind (from-indices [1 1 1]) (from-indices [1 1 1]))
+  (wforce
+   (unbind (from-indices [1 1 1]) (from-indices [1 1 1])))
+  (wforce
+   (unbind (from-indices [1 1 1]) (from-indices [1 1 1])))
+  (wforce
+   (bind (from-indices [1 1 1]) (inverse (from-indices [1 1 1]))))
+
+  (wforce (indices (inverse (from-indices [1 1 1]))))
+  (wforce (indices (inverse (from-indices [0 1 2]))))
+
+  (wforce (inverse (from-indices [0 1 2])))
+
+  (wl/! (w/== a (bind (bind a b) (inverse b))))
+
+  (wforce [a b (bind a (inverse b))])
+  (wforce
+   [(from-indices [0 0 0])
+    (from-indices [1 1 1])
+    (bind (from-indices [0 0 0])
+          (from-indices [1 1 1]))
+    (bind (from-indices [0 0 0])
+          (inverse (from-indices [1 1 1])))])
+
+  (wl/! (similarity (bind a b) a))
+  (wl/! (similarity (unbind (bind b a) b) a))
+  ;; -------
   (wl/start!)
   (wl/stop!))
