@@ -10,8 +10,13 @@
   ;; (:refer-clojure :exclude [empty])
   )
 
-;; hmmm,
-;; not sure
+;; ----------
+;;
+;; Paper: https://ieeexplore.ieee.org/document/7348414
+;;
+
+
+;; hm,
 
 (let [counter (atom 0)]
   (defn w-gensym
@@ -24,12 +29,15 @@
     (wl/! (w/do (w/= sym expr)))
     sym))
 
+(defn wforce [s] (wl/! (w/Normal s)))
+
+;; -----------------
+
+
 (def default-opts
   ;; {:bsbc/segment-length 3 :bsbc/segment-count 3}
   {:bsbc/segment-length 500
    :bsbc/segment-count 20})
-
-(defn wforce [s] (wl/! (w/Normal s)))
 
 (wl/! (w/= 'fromIndices
            (w/fn [indices segmentcount segmentlength]
@@ -190,79 +198,12 @@
 (defn normalize [hd]
   (list 'normalize hd))
 
-(comment
-  (wforce (wseed))
-  (def a (wseed))
-  (def b (wseed))
-  (wforce (similarity a (unbind (bind a b) b)))
-
-  (def addresscount (long 1e6))
-  (def addrwordlength
-    (*
-     (:bsbc/segment-length default-opts)
-     (:bsbc/segment-count default-opts)))
-  (def density 0.0003)
-
-  (def address-matrix
-    (wsym
-     (w/SparseArray
-      (w/Table (w/-> [1 1] 1) [])))
-
-    )
-
-  (wl/!
-   (w/Normal (w/SparseArray
-              (w/Table
-               (w/-> ['n 'j] 1)
-               ['n 10 'j 10]))))
-
-  (wl/!
-   (w/Table
-    (w/-> ['n 'j]
-          1)
-    ['n 10]
-    ['j 10]
-    ;; [['n 10] ['j 10]]
-    ))
-
-
-
-
-  (wl/!
-   (w/Table
-    (w/Table (w/-> ['n 'j] 1) ['j 10])
-    ['n 10])))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 (comment
   ;; ----------------
+
+
   (bind (from-indices [1 1 1]) (from-indices [1 1 1]))
   (wforce
    (unbind (from-indices [1 1 1]) (from-indices [1 1 1])))
@@ -276,6 +217,9 @@
 
   (wforce (inverse (from-indices [0 1 2])))
 
+  (def a (wseed))
+  (def b (wseed))
+
   (wl/! (w/== a (bind (bind a b) (inverse b))))
 
   (wforce [a b (bind a (inverse b))])
@@ -286,6 +230,7 @@
           (from-indices [1 1 1]))
     (bind (from-indices [0 0 0])
           (inverse (from-indices [1 1 1])))])
+
 
   (wl/! (similarity (bind a b) a))
   (wl/! (similarity (unbind (bind b a) b) a))

@@ -36,8 +36,14 @@ Papers with mushroom body models:
 - https://www.pnas.org/doi/10.1073/pnas.2102158118,
 - https://www.cell.com/current-biology/fulltext/S0960-9822(16)31288-X
 - On mushroom bodies and early cognition, [[https://biology.case.edu/faculty/gabriella-wolff/][Gabriella Wolff]] is cool.
+- bee cognition and behaviour: [[https://chittkalab.sbcs.qmul.ac.uk/Lars.html][Lars Chittka]]
 
 - Book: Metazoa, Peter Godfrey-Smith 2021
+
+** Sparse coding / inhibition model
+
+- feedback interneurons: https://pubmed.ncbi.nlm.nih.gov/9886029/
+- locusts: https://pubmed.ncbi.nlm.nih.gov/21551062/, drosophila: https://www.cell.com/current-biology/fulltext/S0960-9822(16)31288-X
 
 * Cerebellum - Sparse Distributed Memory - Transformer - Modern Hopfield
 
