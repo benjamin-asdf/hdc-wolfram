@@ -26,6 +26,10 @@ code-block-background: true
 :::
 
 
+# gh Pages
+
+https://benjamin-asdf.github.io/hdc-wolfram/
+
 # Concept
 
 
@@ -65,6 +69,7 @@ code-block-background: true
 # Build Docs
 
 - Depends on a Quarto install
+- Run `build-site` in build.clj
 
 # Dev
 

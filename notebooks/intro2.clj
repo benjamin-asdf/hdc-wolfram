@@ -103,7 +103,7 @@
 
 (take 10 (wl/! (seed)))
 
-;; A fresh, random hypervector is also called seed,
+;; A fresh, random hypervector is also called `seed`,
 ;; I think because you pick a fresh one when you encounter a new entity.
 ;;
 ;; Subsequently, we will operations that set these seeds into relationships.
