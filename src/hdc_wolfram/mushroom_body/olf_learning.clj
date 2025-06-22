@@ -16,9 +16,20 @@
 ;; https://www.cell.com/current-biology/fulltext/S0960-9822(16)31288-X#mmc1
 ;;
 
+
+
+
+
+
 ;; - Projection Neurons (PNs)
 ;; - Kenyon Cells (KCs)
-;; - PN-KC connectivity matrix
+;; - PN-KC connectivity matrix (either plastic or not)
+;; - downstream readers: extrinsic neurons (ENs)
+;; - EN-KC connectivity matrix (plastic)
+;;
+
+
+
 
 ;;
 ;;
@@ -106,7 +117,7 @@
 ;;
 ;; TODO
 ;;
-;; # Mushroom body | Sparse Distributed Memory
+;; # Mushroom body               | Sparse Distributed Memory
 ;;
 ;;
 ;;
@@ -131,17 +142,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 ;;
 ;; # Inhibition Model
 ;;
@@ -155,7 +155,7 @@
 ;;
 ;; ## dynamic top-p:
 ;;
-;; - 👉 Braitenberg (1978), G. Palm (2022) suggest dynamic inhibition
+;; - 👉 Braitenberg (1978), G. Palm (2022) suggest dynamic inhibition + iterative lookups
 ;;      as search process mechanisms, dubbed 'thought pumps'.
 ;;
 
