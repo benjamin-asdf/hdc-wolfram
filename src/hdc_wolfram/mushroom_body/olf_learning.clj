@@ -39,8 +39,8 @@
 ;;
 ;;   PN
 ;;  +---+                         +---------------+
-;;  | 0 |                         | 0 1 0 0 0 0 0 |    row: PN
-;;  | 0 |                         | ...           |
+;;  | 0 |                         | 0 1 0 0 0 0 0 |  rows: PN
+;;  | 0 |                         | ...           |  columns: KC,   KC-count: ~ 170.000
 ;;  | 1 |                         |               |
 ;;  | . | ----------------------> |               |
 ;;  | . |                         |               |
@@ -48,7 +48,7 @@
 ;;                                  |
 ;;   activations                    |
 ;;   PN-count: ~ 800 - 900          |
-;;                                  | columns: KC,   KC-count: ~ 170.000
+;;                                  |  inner product
 ;;                                  v
 ;;                               +----------------+
 ;;                               |  2 0 0 1 ...   |  `kc-inputs`     = dot product (pn-activations vector,  PN-KC-connectiviy matrix)
@@ -69,19 +69,40 @@
 ;;                                downstream readers
 ;;
 ;;
+;;
+;;
+;;                               ...
+
+
+
+;;
+;; # Preference readout
+;;
+;;
+;;
 ;;                               +--------------------+
-;;                               |                    |    KC-EN connectivity matrix
+;;   kc-activations -----------> |                    |    KC-EN connectivity matrix
 ;;                               |                    |
 ;;                               +--------------------+
-;;                                                         en-inputs = dot product(kc-activations vector, KC-EN-connectivity matrix)
-;;
-;;
+;;                                          |              EN-count = 2         (?)
+;;                                          |
+;;                                          | inner prouct
+;;                                          v
+;;                              +---------------------+
+;;                              |  200      ,    500  |   en-inputs = dot product(kc-activations vector, KC-EN-connectivity matrix)
+;;                              +---------------------+
 ;;                                                        extrinsic neurons
 
 ;;                                EN+         EN-
 ;;
 ;;                               preference:   EN+ - EN-
 ;;
+;;
+;;
+;;
+
+
+
 
 ;;
 ;; # Reward pathway / plasticity
