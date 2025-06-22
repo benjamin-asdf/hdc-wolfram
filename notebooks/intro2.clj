@@ -199,7 +199,7 @@
 
 ;; - In fact, you can pick and pick and keep picking and the similarity will be around 0. (0.5 difference)
 ;; - The universe will run out of time before it runs out of hypervectors.
-;; - Hyperspace is 'seemingly infinite', this property alone is interesting for a cogntive datatype.
+;; - Hyperspace is 'seemingly infinite', this property alone is interesting for a cognitive datatype.
 
 ;; ### Robustness
 

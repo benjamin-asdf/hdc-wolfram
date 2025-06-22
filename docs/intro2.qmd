@@ -431,10 +431,10 @@ nil
 ```
 
 
-- In fact, you can pick and pick and keep picking and the similarity will be around 0.5.
+- In fact, you can pick and pick and keep picking and the similarity will be around 0.
 - The universe will run out of time before it runs out of hypervectors.
-- Hyperspace is 'seemingly infinite', this to me is an interesting property for a cogntive datatype.
-- I can recommend Kanerva 2009 and 'Sparse Distributed Memory' (1998) for more.
+- Hyperspace is 'seemingly infinite', this to me is an interesting property for a cognitive datatype.
+- I can recommend Kanerva 2009 (book chapter) and 'Sparse Distributed Memory' (1998) for more.
 
 
 ----------------------
