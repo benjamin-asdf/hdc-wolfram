@@ -1,0 +1,3 @@
+{:tasks
+ {dev
+  (clojure "-M:dev:build:mcp-nrepl")}}

@@ -4,9 +4,8 @@
   ;; org.scicloj/wolframite {:local/root "../wolframite/"}
   }
  :aliases
- {:dev {:extra-paths ["dev" "test" "notebooks"]
-        :jvm-opts ["-Djdk.attach.allowAttachSelf"]
-        :extra-deps {org.scicloj/clay {:mvn/version "2-beta31.1"}}}
+
+ {
 
   :build
   {:deps {io.github.clojure/tools.build {:git/tag "v0.10.4" :git/sha "31388ff"}
@@ -18,4 +17,13 @@
           org.scicloj/wolframite {:mvn/version "1.0.0"}
           }
    :extra-paths ["notebooks"]
-   :ns-default build}}}
+   :ns-default build}
+
+
+  :dev
+  {:extra-deps
+   {org.scicloj/clay {:mvn/version "2-beta31.1"}
+    cider/cider-nrepl {:mvn/version "0.55.7"}}
+   :extra-paths ["dev" "test" "notebooks"]
+   :jvm-opts ["-Djdk.attach.allowAttachSelf"]}
+  :mcp-nrepl {:main-opts ["-m" "nrepl.cmdline" "--port" "7888"]}}}

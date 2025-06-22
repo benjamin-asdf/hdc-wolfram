@@ -1,1 +1,1 @@
-((nil . ((cider-clojure-cli-aliases . ":dev:build"))))
+((nil . ((cider-clojure-cli-aliases . ":dev:build:mcp-nrepl"))))
