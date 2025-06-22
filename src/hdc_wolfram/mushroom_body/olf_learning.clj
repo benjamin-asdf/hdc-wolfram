@@ -34,7 +34,7 @@
 ;;
 ;;
 ;;
-;;                                PN-KC connectivity matrix
+;;  address register              PN-KC connectivity matrix
 ;;                                = pn-kc-synapses
 ;;
 ;;   PN
@@ -57,9 +57,9 @@
 ;;                                  |
 ;;                                  | top-p   5%
 ;;                                  v
-;;                              +----------------+
-;;                              |   1 0 0 0 ...  |   `kc-activations`
-;;                              +----------------+
+;;                               +----------------+
+;;                               |   1 0 0 0 ...  |   `kc-activations` |  output register
+;;                               +----------------+
 ;;                                                   👉 is a sparse hypervector / a neuronal ensemble
 ;;
 ;;                                     |
@@ -68,12 +68,9 @@
 ;;                                     v
 ;;                                downstream readers
 ;;
-;;
-;;
-;;
 ;;                               ...
-
-
+;;
+;;
 
 ;;
 ;; # Preference readout
